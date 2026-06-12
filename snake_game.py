@@ -275,6 +275,9 @@ class SnakeGame:
 
     # --------------------------------------------------------
     def _pause(self):
+        if self._after_id:
+            self.root.after_cancel(self._after_id)
+            self._after_id = None
         self.paused = True
         self.status_label.config(text="Paused -- Press SPACE to resume")
         self._draw()
@@ -312,5 +315,6 @@ if __name__ == "__main__":
 
     game = SnakeGame(root)
     root.mainloop()
+
 
 
