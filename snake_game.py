@@ -98,6 +98,7 @@ class SnakeGame:
         self.score      = 0
         self.speed      = INIT_SPEED
         self.game_over  = True
+        self.paused      = False
         self._after_id  = None
 
         self._spawn_food()
@@ -152,6 +153,20 @@ class SnakeGame:
             self.canvas.create_rectangle(x1, y1, x2, y2,
                                          fill=color, outline="")
 
+        # Pause overlay
+        if self.paused:
+            self.canvas.create_rectangle(
+                0, 0, self.canvas_width, self.canvas_height,
+                fill="#000000", stipple="gray50", outline="")
+            self.canvas.create_text(
+                self.canvas_width // 2, self.canvas_height // 2 - 15,
+                text="PAUSED", fill="#ffd700",
+                font=("Consolas", 24, "bold"))
+            self.canvas.create_text(
+                self.canvas_width // 2, self.canvas_height // 2 + 25,
+                text="Press SPACE to resume", fill=COLOR_TEXT,
+                font=("Consolas", 12))
+
         # Game Over overlay
         if self.game_over:
             self.canvas.create_rectangle(
@@ -181,9 +196,13 @@ class SnakeGame:
         if key == "space":
             if self.game_over:
                 self._start()
+            elif not self.paused:
+                self._pause()
+            else:
+                self._resume()
             return
 
-        if self.game_over:
+        if self.game_over or self.paused:
             return
 
         # Arrow keys / WASD
@@ -216,6 +235,9 @@ class SnakeGame:
     # --------------------------------------------------------
     def _tick(self):
         if self.game_over:
+            return
+        if self.paused:
+            self._after_id = self.root.after(self.speed, self._tick)
             return
 
         # apply buffered direction
@@ -252,8 +274,22 @@ class SnakeGame:
         self._after_id = self.root.after(self.speed, self._tick)
 
     # --------------------------------------------------------
+    def _pause(self):
+        self.paused = True
+        self.status_label.config(text="Paused -- Press SPACE to resume")
+        self._draw()
+
+    # --------------------------------------------------------
+    def _resume(self):
+        self.paused = False
+        self.status_label.config(text="Playing... Arrow keys or WASD to move")
+        self._draw()
+        self._tick()
+
+    # --------------------------------------------------------
     def _end_game(self):
         self.game_over = True
+        self.paused      = False
         self.status_label.config(text="Press SPACE to restart")
         self._draw()
 
@@ -276,3 +312,5 @@ if __name__ == "__main__":
 
     game = SnakeGame(root)
     root.mainloop()
+
+
